@@ -1,0 +1,6 @@
+schema: "http://localhost:5001/graphql"
+generates:
+  apollo/generated/graphqlEden.ts:
+    plugins:
+      - "typescript"
+      - "fragment-matcher"
