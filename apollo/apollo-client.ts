@@ -5,32 +5,20 @@ import {
   ApolloLink,
 } from "@apollo/client";
 
-// import {
-//   getAuthenticationToken,
-//   getRefreshToken,
-//   setAuthenticationToken,
-// } from "@/lib/auth/state";
-import jwt_decode from "jwt-decode";
+import {
+  getAuthenticationToken,
+  // getRefreshToken,
+  // setAuthenticationToken,
+} from "@/lib/auth/state";
 
-// import { refreshAuth } from "@/queries/auth/refresh";
-import { EDEN_URL } from "./constants";
+import { NEXT_PUBLIC_GRAPHQL_URL, NEXT_PUBLIC_GRAPHQL_WSS } from "../constants";
 
-type decodedType = {
-  exp: number;
-  iat: number;
-  id: string;
-  role: string;
-};
-let decoded: decodedType;
-
-const httpLink = new HttpLink({ uri: EDEN_URL });
+const httpLink = new HttpLink({ uri: NEXT_PUBLIC_GRAPHQL_URL });
 
 const authLink = new ApolloLink((operation, forward) => {
-  //   const token = getAuthenticationToken() as string;
+  const token = getAuthenticationToken() as string;
   //   const refreshToken = getRefreshToken() as string;
-  //   if (token) decoded = jwt_decode(token as string);
-  const token = "";
-  console.log("token", token);
+
   // Use the setContext method to set the HTTP headers.
   operation.setContext({
     headers: {
@@ -58,7 +46,7 @@ const authLink = new ApolloLink((operation, forward) => {
 export const apolloClient = () => {
   const apolloClient = new ApolloClient({
     link: authLink.concat(httpLink),
-    uri: EDEN_URL,
+    uri: NEXT_PUBLIC_GRAPHQL_URL,
     cache: new InMemoryCache({
       typePolicies: {
         Query: {

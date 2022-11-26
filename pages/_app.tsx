@@ -4,12 +4,15 @@ import type { AppProps } from "next/app";
 // import { createContext, useState } from "react";
 
 import { ApolloProvider } from "@apollo/client";
+import { UserProvider } from "@/context";
 import { apolloClient } from "@/apollo/apollo-client";
 
 function MyApp({ Component, pageProps }: AppProps) {
   return (
     <ApolloProvider client={apolloClient()}>
-      <Component {...pageProps} />
+      <UserProvider>
+        <Component {...pageProps} />
+      </UserProvider>
     </ApolloProvider>
   );
 }

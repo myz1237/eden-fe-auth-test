@@ -2,10 +2,13 @@ import type { GetServerSideProps, NextPage } from "next";
 import { useEffect, useContext } from "react";
 import Head from "next/head";
 import { useRouter } from "next/router";
+import { setAuthenticationToken } from "@/lib/auth/state";
+
+import { NEXT_PUBLIC_CALLBACK_URL, NEXT_PUBLIC_API_URL } from "../../constants";
 
 import context from "../_app";
 
-const CallbackPage: NextPage = () => {
+const CallbackPage: NextPage = ({ token }: any) => {
   // const { setUser, user } = useContext(context);
   // let loaderData = useLoaderData();
   // const { setUser, user } = useContext(context);
@@ -16,10 +19,22 @@ const CallbackPage: NextPage = () => {
   const router = useRouter();
   const { code } = router.query;
 
+  // console.log("token", token);
+
+  useEffect(() => {
+    if (token) {
+      setAuthenticationToken({
+        token: { accessToken: token, refreshToken: `` },
+      });
+      // setUser(token);
+      // navigate("/dashboard");
+    }
+  }, [token]);
+
   useEffect(() => {
     if (code) {
       console.log(code);
-      router.push("/profile");
+      // router.push("/profile");
     }
     // if (
     //   //   loaderData &&
@@ -54,46 +69,31 @@ const CallbackPage: NextPage = () => {
 
 export default CallbackPage;
 
-// import { IncomingMessage, ServerResponse } from "http";
-// import { Context } from "@apollo/client";
-// import { getSession } from "next-auth/react";
-
 export const getServerSideProps: GetServerSideProps = async (context) => {
-  // export async function getServerSideProps(ctx: any) {
-  console.log("context", context.query);
+  // console.log("context", context.query);
   const { code } = context.query;
-  //   const session = await getSession(ctx);
-  console.log(process.env.NEXT_PUBLIC_API_URL);
+  // console.log(process.env.NEXT_PUBLIC_API_URL);
 
-  await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+  const token = await fetch(`${NEXT_PUBLIC_API_URL}/auth/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
       code,
-      redirect_uri: process.env.NEXT_PUBLIC_CALLBACK_URL,
+      redirect_uri: NEXT_PUBLIC_CALLBACK_URL,
     }),
   })
     .then((res) => res.json())
     .then(({ discord_user, eden_user, token }) => {
-      console.log({ discord_user, eden_user, token });
-      //   localStorage.setItem("eden_token", token);
-      //   return { discord_user, eden_user, token };
+      console.log({ discord_user, eden_user });
+      // console.log("token", token);
+      return token;
     });
 
-  //   const url = ctx.req.url?.replace("/", "");
-
-  // if (!data) {
-  //   return {
-  //     redirect: {
-  //       destination: `/login?redirect=${data.loginUrl}`,
-  //       permanent: false,
-  //     },
-  //   };
-  // }
-
   return {
-    props: {},
+    props: {
+      token: token || ``,
+    },
   };
 };

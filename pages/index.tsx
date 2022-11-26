@@ -7,16 +7,6 @@ const API_URL = "http://localhost:5001";
 const CALLBACK_URL = "http://localhost:3000/callback";
 
 const Home: NextPage = () => {
-  // useEffect(() => {
-  //   console.log("Hello from useEffect");
-  //   const fetcher = async () => {
-  //     const res = await fetch("/api/hello");
-  //     const data = await res.json();
-  //     console.log(data);
-  //   };
-  //   fetcher();
-  // }, []);
-
   const [loginUrl, setLoginUrl] = useState("");
   let queryParams = useMemo(() => {
     return new URLSearchParams();
@@ -43,7 +33,7 @@ const Home: NextPage = () => {
 
       <main className={styles.main}>
         <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
+          Welcome to <a href={loginUrl}>Eden test Auth</a>
         </h1>
 
         <p className={styles.description}>{loginUrl}</p>
