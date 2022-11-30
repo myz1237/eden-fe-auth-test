@@ -38,6 +38,7 @@ const ProfilePage: NextPage = () => {
           bio: bio,
         },
       },
+      context: { serviceName: "soilservice" },
     });
   };
 
