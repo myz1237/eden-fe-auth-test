@@ -1,9 +1,16 @@
 import {
   ApolloClient,
   InMemoryCache,
+  from,
   HttpLink,
   ApolloLink,
+  split,
 } from "@apollo/client";
+import { onError } from "@apollo/client/link/error";
+import { RetryLink } from "@apollo/client/link/retry";
+import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
+import { createClient } from "graphql-ws";
+import { getMainDefinition } from "@apollo/client/utilities";
 
 import {
   getAuthenticationToken,
@@ -13,9 +20,9 @@ import {
 
 import { NEXT_PUBLIC_GRAPHQL_URL, NEXT_PUBLIC_GRAPHQL_WSS } from "../constants";
 
-const httpLink = new HttpLink({ uri: NEXT_PUBLIC_GRAPHQL_URL });
+const httpLinkEden = new HttpLink({ uri: NEXT_PUBLIC_GRAPHQL_URL });
 
-const authLink = new ApolloLink((operation, forward) => {
+const edenLink = new ApolloLink((operation, forward) => {
   const token = getAuthenticationToken() as string;
   //   const refreshToken = getRefreshToken() as string;
 
@@ -43,10 +50,61 @@ const authLink = new ApolloLink((operation, forward) => {
   return forward(operation);
 });
 
+const httpLinkExtra = new HttpLink({ uri: NEXT_PUBLIC_GRAPHQL_URL, fetch });
+
+// const NEXT_PUBLIC_GRAPHQL_NODE_URL
+
+const extraLink = new ApolloLink((operation, forward) => {
+  // Use the setContext method to set the HTTP headers.
+  operation.setContext({
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+    },
+  });
+  // Call the next link in the middleware chain.
+  return forward(operation);
+});
+
+const directionalLink = new RetryLink().split(
+  (operation) => operation.getContext().serviceName === "soilservice",
+  edenLink.concat(httpLinkEden),
+  extraLink.concat(httpLinkExtra)
+);
+
+const errorLink = onError(({ graphQLErrors }) => {
+  if (graphQLErrors) graphQLErrors.map(({ message }) => console.log(message));
+});
+
+const wsLink =
+  typeof window !== "undefined"
+    ? new GraphQLWsLink(
+        createClient({
+          url: `${NEXT_PUBLIC_GRAPHQL_WSS}`,
+        })
+      )
+    : null;
+
+const splitLink =
+  typeof window !== "undefined" && wsLink
+    ? split(
+        ({ query }) => {
+          const definition = getMainDefinition(query);
+          return (
+            definition.kind === "OperationDefinition" &&
+            definition.operation === "subscription"
+          );
+        },
+        wsLink,
+        directionalLink
+      )
+    : directionalLink;
+
 export const apolloClient = () => {
   const apolloClient = new ApolloClient({
-    link: authLink.concat(httpLink),
-    uri: NEXT_PUBLIC_GRAPHQL_URL,
+    ssrMode: typeof window === "undefined",
+    // link: authLink.concat(httpLink),
+    link: from([errorLink, splitLink]),
+    // uri: NEXT_PUBLIC_GRAPHQL_URL,
     cache: new InMemoryCache({
       typePolicies: {
         Query: {

@@ -2,6 +2,7 @@ import "../styles/globals.css";
 import type { AppProps } from "next/app";
 
 // import { createContext, useState } from "react";
+import { Header } from "@/components";
 
 import { ApolloProvider } from "@apollo/client";
 import { UserProvider } from "@/context";
@@ -11,6 +12,7 @@ function MyApp({ Component, pageProps }: AppProps) {
   return (
     <ApolloProvider client={apolloClient()}>
       <UserProvider>
+        <Header />
         <Component {...pageProps} />
       </UserProvider>
     </ApolloProvider>

@@ -1,126 +1,48 @@
-import { gql, useMutation, useQuery, useSubscription } from "@apollo/client";
+import { useQuery, useSubscription } from "@apollo/client";
 import { FIND_CURRENTUSER, FIND_CURRENTUSER_SUB } from "../../graphql";
-import { Members, Mutation } from "../../apollo/generated/graphqlEden";
-// import { useSession } from "next-auth/react";
 import React, { useEffect, useState } from "react";
+
+import { getAuthenticationToken } from "@/lib/auth/state";
 
 // import { isAllServers, isEdenStaff } from "../../data";
 // import { isAllServers } from "../../data";
 import { UserContext } from "./UserContext";
+import jwt_decode from "jwt-decode";
 
-// const findMutualGuilds = async () => {
-//   const response = await fetch(encodeURI("/api/discord/fetchMutualGuilds"), {
-//     method: "POST",
-//     headers: {
-//       "Content-Type": "application/json",
-//       Accept: "application/json",
-//     },
-//   });
-
-//   return response.json();
-// };
-
-// const findMember = async () => {
-//   const response = await fetch(encodeURI(`/api/discord/fetchMember`), {
-//     method: "POST",
-//     headers: {
-//       "Content-Type": "application/json",
-//       Accept: "application/json",
-//     },
-//   });
-
-//   return response.json();
-// };
-
-// const ADD_NEW_MEMBER = gql`
-//   mutation AddNewMember($fields: addNewMemberInput!) {
-//     addNewMember(fields: $fields) {
-//       _id
-//       discordAvatar
-//       discordName
-//       discriminator
-//     }
-//   }
-// `;
-
-// const UPDATE_MEMBER = gql`
-//   mutation ($fields: updateMemberInput!) {
-//     updateMember(fields: $fields) {
-//       _id
-//     }
-//   }
-// `;
+type decodedType = {
+  exp: number;
+  iat: number;
+  _id: string;
+  discordName: string;
+};
+let decoded: decodedType = {
+  exp: 0,
+  iat: 0,
+  _id: "",
+  discordName: "",
+};
 
 export interface UserProviderProps {
   children: React.ReactNode;
 }
 
 export const UserProvider = ({ children }: UserProviderProps) => {
-  // const { data: session } = useSession();
+  const token = getAuthenticationToken() as string;
+  if (token) decoded = jwt_decode(token as string);
+  const { _id } = decoded;
 
-  // const { id } = session?.user || { id: null };
-
-  const id = null;
-  const discordName = `waxy`;
-
-  const [memberFound, setMemberFound] = useState(false);
   const [memberServers, setMemberServers] = useState<any>(null);
   const [selectedServer, setSelectedServer] = useState<any>();
 
-  // const [addNewMember, {}] = useMutation(ADD_NEW_MEMBER, {
-  //   onCompleted({ addNewMember }: Mutation) {
-  //     if (!addNewMember) console.log("addNewMember is null");
-  //     // console.log("addNewMember", addNewMember);
-  //     setMemberFound(true);
-  //     refetch();
-  //   },
-  //   onError() {
-  //     // console.log("error", error);
-  //     refetch();
-  //   },
-  // });
-
-  // const [updateMember, {}] = useMutation(UPDATE_MEMBER, {
-  //   onCompleted({ updateMember }: Mutation) {
-  //     if (!updateMember) console.log("updateMember is null");
-  //     // console.log("updateMember", updateMember);
-  //   },
-  // });
-
-  const { data: dataMember, refetch } = useQuery(FIND_CURRENTUSER, {
+  const { data: dataMember } = useQuery(FIND_CURRENTUSER, {
     variables: {
       fields: {
-        // _id: id,
-        discordName: discordName,
+        _id: _id,
       },
     },
-    skip: !discordName,
-    // context: { serviceName: "soilservice" },
-    ssr: false,
-    onCompleted: async (data) => {
-      // console.log("data", data);
-      // if (!data.findMember) {
-      //   await findMember()
-      //     .then((member) => {
-      //       // console.log("member NOT found", member.member);
-      //       // addNewMember({
-      //       //   variables: {
-      //       //     fields: {
-      //       //       _id: session?.user?.id,
-      //       //       discordName: session?.user?.name,
-      //       //       discordAvatar: session?.user?.image,
-      //       //       discriminator: member?.member?.discriminator || "",
-      //       //     },
-      //       //   },
-      //       // });
-      //     })
-      //     .catch((err) => {
-      //       console.log("err", err);
-      //     });
-      // } else {
-      //   setMemberFound(true);
-      // }
-    },
+    skip: !_id,
+    context: { serviceName: "soilservice" },
+    // ssr: false,
   });
 
   // if (dataMember?.findMember) console.log("dataMember", dataMember?.findMember);
@@ -128,10 +50,10 @@ export const UserProvider = ({ children }: UserProviderProps) => {
   useSubscription(FIND_CURRENTUSER_SUB, {
     variables: {
       fields: {
-        _id: id,
+        _id: _id,
       },
     },
-    skip: !id || !memberFound,
+    skip: !_id,
     context: { serviceName: "soilservice" },
   });
 
@@ -155,12 +77,6 @@ export const UserProvider = ({ children }: UserProviderProps) => {
 
   const injectContext = {
     currentUser: dataMember?.findMember || undefined,
-    memberFound,
-    setCurrentUser: (user: Members) => {
-      console.log("setCurrentUser", user);
-      // injectContext.currentUser = user;
-    },
-    refechProfile: () => refetch,
     memberServers,
     selectedServer,
     setSelectedServer,
