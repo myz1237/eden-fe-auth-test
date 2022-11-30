@@ -2,11 +2,13 @@ import { useEffect, useState, useMemo, useContext } from "react";
 import { UserContext } from "@/context";
 import { NEXT_PUBLIC_API_URL, NEXT_PUBLIC_CALLBACK_URL } from "../constants";
 import { removeAuthenticationToken } from "@/lib/auth/state";
+import { useRouter } from "next/router";
 
 import styles from "../styles/Home.module.css";
 
 export const Header = () => {
-  const { currentUser } = useContext(UserContext);
+  const router = useRouter();
+  const { currentUser, clearCurrentUser } = useContext(UserContext);
   const [loginUrl, setLoginUrl] = useState("");
   let queryParams = useMemo(() => {
     return new URLSearchParams();
@@ -24,19 +26,30 @@ export const Header = () => {
   }, [queryParams]);
 
   const handleLogout = () => {
-    console.log("logout");
+    // console.log("logout");
     removeAuthenticationToken();
+    clearCurrentUser();
+    // router.push("/login");
   };
   return (
-    <div>
-      <a className={styles.button} href={loginUrl}>
-        Login with Discord
-      </a>
-      <button className={styles.button} onClick={() => handleLogout()}>
-        log out
-      </button>
-      {/* <span className={styles.loggedIn}>{currentUser && "Logged In"}</span>
-      <span className={styles.loggedOut}>{!currentUser && "LOGGED OUT"}</span> */}
+    <div style={{ padding: "2rem" }}>
+      {!currentUser && (
+        <div>
+          <a className={styles.button} href={loginUrl}>
+            Login with Discord
+          </a>
+          <span className={styles.loggedOut}>STATUS: LOGGED OUT</span>
+        </div>
+      )}
+
+      {currentUser && (
+        <div>
+          <button className={styles.button} onClick={() => handleLogout()}>
+            log out
+          </button>
+          <span className={styles.loggedIn}>STATUS: Logged In</span>
+        </div>
+      )}
     </div>
   );
 };

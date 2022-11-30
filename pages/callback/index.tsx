@@ -1,15 +1,12 @@
 import type { GetServerSideProps, NextPage } from "next";
-import { useEffect, useContext } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/router";
 import { setAuthenticationToken } from "@/lib/auth/state";
 
 import { NEXT_PUBLIC_CALLBACK_URL, NEXT_PUBLIC_API_URL } from "../../constants";
 
-import context from "../_app";
-
 const CallbackPage: NextPage = ({ token }: any) => {
   const router = useRouter();
-  const { code } = router.query;
 
   // console.log("token", token);
 
@@ -18,17 +15,9 @@ const CallbackPage: NextPage = ({ token }: any) => {
       setAuthenticationToken({
         token: { accessToken: token, refreshToken: `` },
       });
-      // setUser(token);
-      // navigate("/dashboard");
+      router.push("/profile");
     }
-  }, [token]);
-
-  useEffect(() => {
-    if (code) {
-      console.log(code);
-      // router.push("/profile");
-    }
-  }, []);
+  }, [router, token]);
 
   return (
     <div>
@@ -41,9 +30,16 @@ const CallbackPage: NextPage = ({ token }: any) => {
 
 export default CallbackPage;
 
-export const getServerSideProps: GetServerSideProps = async (context) => {
-  // console.log("context", context.query);
-  const { code } = context.query;
+import { IncomingMessage, ServerResponse } from "http";
+
+// export const getServerSideProps: GetServerSideProps = async (ctx) => {
+export async function getServerSideProps(ctx: {
+  query: any;
+  req: IncomingMessage;
+  res: ServerResponse;
+}) {
+  console.log(" query ====>  ", ctx.query);
+  const { code } = ctx.query;
   // console.log(process.env.NEXT_PUBLIC_API_URL);
 
   const token = await fetch(`${NEXT_PUBLIC_API_URL}/auth/login`, {
@@ -68,4 +64,4 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       token: token || ``,
     },
   };
-};
+}

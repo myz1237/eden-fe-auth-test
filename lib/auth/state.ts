@@ -6,9 +6,8 @@ interface authToken {
 }
 export const setAuthenticationToken = ({ token }: authToken) => {
   if (typeof window !== "undefined") {
-    console.log("setAuthenticationToken", token);
+    // console.log("setAuthenticationToken", token);
     localStorage.setItem("eden_access_token", token.accessToken);
-    // sessionStorage.setItem("eden_refresh_token", token.refreshToken);
   }
 };
 

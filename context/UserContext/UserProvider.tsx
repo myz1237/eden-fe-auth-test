@@ -8,6 +8,7 @@ import { getAuthenticationToken } from "@/lib/auth/state";
 // import { isAllServers } from "../../data";
 import { UserContext } from "./UserContext";
 import jwt_decode from "jwt-decode";
+import { Maybe, Members } from "@/apollo/generated/graphqlEden";
 
 type decodedType = {
   exp: number;
@@ -34,18 +35,22 @@ export const UserProvider = ({ children }: UserProviderProps) => {
   const [memberServers, setMemberServers] = useState<any>(null);
   const [selectedServer, setSelectedServer] = useState<any>();
 
+  const [currentUser, setCurrentUser] = useState<Maybe<Members>>(null);
+
   const { data: dataMember } = useQuery(FIND_CURRENTUSER, {
     variables: {
       fields: {
-        _id: _id,
+        // _id: _id,
+        discordName: "waxy",
       },
     },
     skip: !_id,
     context: { serviceName: "soilservice" },
-    // ssr: false,
+    ssr: false,
   });
 
   // if (dataMember?.findMember) console.log("dataMember", dataMember?.findMember);
+  // console.log("dataMember", dataMember?.findMember);
 
   useSubscription(FIND_CURRENTUSER_SUB, {
     variables: {
@@ -60,6 +65,10 @@ export const UserProvider = ({ children }: UserProviderProps) => {
   // if (dataMember) console.log("dataMember", dataMember.findMember);
 
   useEffect(() => {
+    if (dataMember?.findMember) {
+      setCurrentUser(dataMember?.findMember);
+      setMemberServers(dataMember?.findMember?.servers);
+    }
     if (dataMember && process.env.NODE_ENV === "development") {
       console.log(`==== current USER ====`);
       console.log(dataMember.findMember);
@@ -76,7 +85,15 @@ export const UserProvider = ({ children }: UserProviderProps) => {
   }, [selectedServer]);
 
   const injectContext = {
-    currentUser: dataMember?.findMember || undefined,
+    currentUser: currentUser,
+    setCurrentUser: (user: Members) => {
+      console.log("setCurrentUser", user);
+      // injectContext.currentUser = user;
+    },
+    clearCurrentUser: () => {
+      console.log("clearCurrentUser");
+      setCurrentUser(null);
+    },
     memberServers,
     selectedServer,
     setSelectedServer,

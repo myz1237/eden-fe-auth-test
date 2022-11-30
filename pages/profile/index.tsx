@@ -4,6 +4,7 @@ import { UserContext } from "@/context";
 import styles from "../../styles/Home.module.css";
 import { gql, useMutation } from "@apollo/client";
 import { Mutation } from "@/apollo/generated/graphqlEden";
+import { EditGardenTeam } from "@/components";
 
 const UPDATE_MEMBER = gql`
   mutation ($fields: updateMemberInput!) {
@@ -43,6 +44,8 @@ const ProfilePage: NextPage = () => {
   return (
     <div>
       <main>
+        <h1>Edit Your Bio - updateMember</h1>
+
         <div className={styles.card}>
           <img
             className={styles.avatar}
@@ -64,6 +67,7 @@ const ProfilePage: NextPage = () => {
             set bio
           </button>
         </div>
+        <EditGardenTeam />
       </main>
     </div>
   );
